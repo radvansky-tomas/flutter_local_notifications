@@ -25,6 +25,7 @@ NSString *const REQUEST_BADGE_PERMISSION = @"requestBadgePermission";
 NSString *const DEFAULT_PRESENT_ALERT = @"defaultPresentAlert";
 NSString *const DEFAULT_PRESENT_SOUND = @"defaultPresentSound";
 NSString *const DEFAULT_PRESENT_BADGE = @"defaultPresentBadge";
+NSString *const NOTIFICATION_CENTER_DELEGATE = @"registerUNUserNotificationCenterDelegate";
 NSString *const PLATFORM_SPECIFICS = @"platformSpecifics";
 NSString *const ID = @"id";
 NSString *const TITLE = @"title";
@@ -66,10 +67,7 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
                methodChannelWithName:CHANNEL
                binaryMessenger:[registrar messenger]];
     FlutterLocalNotificationsPlugin* instance = [[FlutterLocalNotificationsPlugin alloc] init];
-    if(@available(iOS 10.0, *)) {
-        UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-        center.delegate = instance;
-    }
+    
     [registrar addApplicationDelegate:instance];
     [registrar addMethodCallDelegate:instance channel:channel];
 }
@@ -98,8 +96,16 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
     if (arguments[REQUEST_BADGE_PERMISSION] != [NSNull null]) {
         requestedBadgePermission = [arguments[REQUEST_BADGE_PERMISSION] boolValue];
     }
+ 
     if(@available(iOS 10.0, *)) {
         UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+        bool notificationCenterDelegate = false;
+        if (arguments[NOTIFICATION_CENTER_DELEGATE] != [NSNull null]) {
+            notificationCenterDelegate = [arguments[NOTIFICATION_CENTER_DELEGATE] boolValue];
+        }
+        if (notificationCenterDelegate) {
+            center.delegate = self;
+        }
         UNAuthorizationOptions authorizationOptions = 0;
         if (requestedSoundPermission) {
             authorizationOptions += UNAuthorizationOptionSound;
